@@ -52,6 +52,7 @@ impl CommandParser {
             parser_try_cancel,
             parser_try,
             parse_tree_closed,
+            parse_tree_open,
         ];
 
         text.lines()
@@ -117,20 +118,6 @@ fn parse_parts(input: &str) -> Result<Vec<CommandPart>, CommandParseError> {
         // Stop parsing, as this is a command for another bot, such as `@rust-timer queue`.
         if item.starts_with('@') {
             break;
-        }
-
-        // Special handling for r- command
-        if item == "r-" {
-            parts.push(CommandPart::Bare("r-"));
-            continue;
-        }
-
-        // Handle commands with trailing hyphens (e.g., "treeclosed-")
-        if item.ends_with('-') && !item.contains('=') && item != "r-" {
-            let base = &item[..item.len() - 1];
-            parts.push(CommandPart::Bare(base));
-            parts.push(CommandPart::Bare("-"));
-            continue;
         }
 
         match item.split_once('=') {
@@ -341,19 +328,29 @@ fn parse_priority_arg<'a>(parts: &[CommandPart<'a>]) -> Result<Option<u32>, Comm
     Ok(priority)
 }
 
+/// Parses "@bors treeclosed-"
+fn parse_tree_open<'a>(command: &'a str, _parts: &[CommandPart<'a>]) -> ParseResult<'a> {
+    if command != "treeclosed-" {
+        return None;
+    }
+    Some(Ok(BorsCommand::TreeOpen))
+}
+
+/// Parses "@bors treeclosed=<priority>"
 fn parse_tree_closed<'a>(command: &'a str, parts: &[CommandPart<'a>]) -> ParseResult<'a> {
     if command != "treeclosed" {
         return None;
     }
 
     if parts.len() == 1 {
-        match parts[0] {
-            CommandPart::Bare("-") => Some(Ok(BorsCommand::TreeOpen)),
-            CommandPart::Bare(value) => Some(Err(CommandParseError::UnknownArg(value))),
-            CommandPart::KeyValue { value, .. } => match validate_priority(value) {
+        match parts {
+            [CommandPart::KeyValue { value, .. }] => match validate_priority(value) {
                 Ok(priority) => Some(Ok(BorsCommand::TreeClosed(priority))),
                 Err(e) => Some(Err(e)),
             },
+            _ => Some(Err(CommandParseError::MissingArgValue {
+                arg: "treeclosed",
+            })),
         }
     } else {
         Some(Err(CommandParseError::MissingArgValue {

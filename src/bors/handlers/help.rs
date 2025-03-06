@@ -68,7 +68,7 @@ fn get_command_help(command: BorsCommand) -> String {
             "`try cancel`: Cancel a running try build"
         }
         BorsCommand::TreeOpen => {
-            "`tree open`: Open the repository tree for merging"
+            "`treeclosed-`: Open the repository tree for merging"
         }
         BorsCommand::TreeClosed(_) => {
             "`treeclosed=<priority>`: Close the tree for PRs with priority less than `<priority>`"
@@ -94,7 +94,7 @@ mod tests {
             - `try cancel`: Cancel a running try build
             - `ping`: Check if the bot is alive
             - `help`: Print this help message
-            - `tree open`: Open the repository tree for merging
+            - `treeclosed-`: Open the repository tree for merging
             - `treeclosed=<priority>`: Close the tree for PRs with priority less than `<priority>`
             ");
             Ok(tester)

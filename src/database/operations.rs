@@ -384,7 +384,7 @@ pub(crate) async fn get_repository_treeclosed(
     let row = sqlx::query_as!(
         RepoModel,
         r#"
-        SELECT id, name, COALESCE(treeclosed, 0) as "treeclosed: TreeState", treeclosed_src, created_at
+        SELECT id, name, treeclosed as "treeclosed: TreeState", treeclosed_src, created_at
         FROM repository
         WHERE name = $1
         "#,
